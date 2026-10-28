@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สุ่มเมนูอาหารวันนี้ - Food Menu Randomizer</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font (Kanit) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Kanit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #fffaf5;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #fff7ed;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #fdba74;
+            border-radius: 4px;
+        }
+
+        @keyframes pulse-shake {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(0.98) rotate(-1deg); }
+            75% { transform: scale(1.02) rotate(1deg); }
+        }
+
+        .animate-randomizing {
+            animation: pulse-shake 0.15s infinite;
+        }
+
+        .fade-enter {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px) scale(0.97);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-gray-800">
+
+    <!-- 1. NAVBAR / HEADER -->
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md shadow-sm border-b border-orange-100">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20">
+                <!-- Logo & Brand Name -->
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-tr from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center text-white shadow-md shadow-orange-200">
+                        <i class="fa-solid fa-utensils text-lg sm:text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg sm:text-xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+                            สุ่มเมนูอาหารวันนี้
+                        </h1>
+                        <p class="text-xs text-gray-400 hidden sm:block">คิดไม่ออก... ให้เราช่วยสุ่มเมนูอร่อย!</p>
+                    </div>
+                </div>
+
+                <!-- Action Button in Navbar -->
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow max-w-4xl w-full mx-auto px-4 py-8 sm:py-12 flex flex-col items-center justify-center">
+        
+        <!-- Hero Title Banner -->
+        <div class="text-center mb-8">
+            <span class="px-3 py-1 text-xs font-semibold uppercase tracking-wider text-orange-600 bg-orange-100 rounded-full">
+                What to eat today?
+            </span>
+            <h2 class="text-2xl sm:text-4xl font-extrabold text-gray-900 mt-2 mb-3">
+                มื้อนี้ทานอะไรดี?
+            </h2>
+            <p class="text-sm sm:text-base text-gray-500 max-w-md mx-auto">
+                กดปุ่มด้านล่างเพื่อสุ่มไอเดียเมนูอาหารแสนอร่อย สำหรับมื้อนี้ของคุณ!
+            </p>
+        </div>
+
+        <!-- 2. MAIN DISPLAY CARD -->
+        <div id="menuCardContainer" class="w-full bg-white rounded-3xl shadow-xl shadow-orange-100/50 border border-orange-100/80 overflow-hidden transition-all duration-300">
+            <div id="menuCard" class="flex flex-col md:flex-row">
+                
+                <!-- Food Image Container (Placeholder Ready) -->
+                <div class="md:w-1/2 relative bg-gray-100 overflow-hidden min-h-[280px] sm:min-h-[340px] flex items-center justify-center">
+                    
+                    <!-- Element 1: Image element -->
+                    <img id="foodImg" 
+                         src="" 
+                         alt="รูปเมนูอาหาร" 
+                         class="w-full h-full object-cover object-center transition-all duration-500 hidden"
+                         onload="handleImgLoadSuccess()"
+                         onerror="handleImgLoadError()" />
+
+                    <!-- Element 2: Decorative Placeholder Box (เมื่อไม่มีรูป/รูปโหลดไม่ได้) -->
+                    <div id="imgPlaceholder" class="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-amber-50 via-orange-50 to-orange-100 border-2 border-dashed border-orange-200">
+                        <div class="w-16 h-16 rounded-2xl bg-white/80 shadow-sm flex items-center justify-center text-orange-400 mb-3">
+                            <i class="fa-solid fa-image text-3xl"></i>
+                        </div>
+                        <h4 class="font-bold text-orange-900 text-sm sm:text-base mb-1">ช่องสำหรับใส่รูปภาพอาหาร</h4>
+                        <p class="text-xs text-orange-600/80 max-w-xs leading-relaxed mb-3">
+                            คุณสามารถใส่ URL รูปภาพ หรือนำไฟล์รูปของคุณมาใส่ที่โค้ด <code class="bg-white/80 px-1.5 py-0.5 rounded text-orange-700">image: '...'</code> ได้เลย
+                        </p>
+                        <button onclick="openEditCurrentImageModal()" class="px-3 py-1.5 bg-white hover:bg-orange-50 text-orange-600 text-xs font-semibold rounded-xl border border-orange-200 shadow-sm transition">
+                            <i class="fa-solid fa-link mr-1"></i> ใส่ URL รูปเมนูนี้นี้
+                        </button>
+                    </div>
+                    
+                    <!-- Tag Badge -->
+                    <span id="foodCategory" class="absolute top-4 left-4 bg-white/90 backdrop-blur-md text-orange-700 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
+                        อาหารจานเดียว
+                    </span>
+
+                    <!-- Price Badge -->
+                    <div class="absolute bottom-4 right-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold px-4 py-2 rounded-2xl shadow-lg flex items-center gap-1">
+                        <span class="text-xs font-light">ราคาประมาณ</span>
+                        <span id="foodPrice" class="text-lg sm:text-xl">--</span>
+                        <span class="text-xs">บาท</span>
+                    </div>
+                </div>
+
+                <!-- Food Details Section -->
+                <div class="md:w-1/2 p-6 sm:p-8 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            <h3 id="foodTitle" class="text-2xl sm:text-3xl font-bold text-gray-800 tracking-tight">
+                                กำลังโหลด...
+                            </h3>
+                        </div>
+                        
+                        <!-- Rating Stars (Decorative) -->
+                        <div class="flex items-center gap-1 text-amber-400 text-sm mb-4">
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star-half-stroke"></i>
+                            <span class="text-xs text-gray-400 ml-1">(เมนูยอดนิยม)</span>
+                        </div>
+
+                        <p id="foodDescription" class="text-gray-600 text-sm sm:text-base leading-relaxed mb-6 min-h-[75px]">
+                            กดปุ่มสุ่มเพื่อเริ่มค้นหาเมนูอาหารที่คุณถูกใจในมื้อนี้!
+                        </p>
+                    </div>
+
+                    <!-- 3. RANDOM BUTTON -->
+                    <div class="pt-4 border-t border-gray-100">
+                        <button id="randomBtn" onclick="randomizeMenu()" 
+                                class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-base sm:text-lg shadow-lg shadow-orange-500/30 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-3">
+                            <i id="btnIcon" class="fa-solid fa-dice text-xl animate-bounce"></i>
+                            <span id="btnText">สุ่มเมนูอาหาร!</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Counter / Quick Stats -->
+        <div class="mt-6 text-xs sm:text-sm text-gray-400 flex items-center gap-2">
+            <i class="fa-solid fa-bowl-food text-orange-400"></i>
+            <span>มีรายการอาหารทั้งหมดในระบบ <strong id="totalMenuItemsCount" class="text-orange-600 font-semibold">8</strong> รายการ</span>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-orange-100 py-6 text-center text-xs text-gray-400">
+        <div class="max-w-6xl mx-auto px-4">
+            <p>© 2026 สุ่มเมนูอาหารวันนี้ (Food Menu Randomizer) - อร่อยทุกมื้อ ไม่มีเครียด</p>
+        </div>
+    </footer>
+
+    <!-- MODAL: ADD / EDIT MENU -->
+    <div id="addMenuModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative animate-fadeIn">
+            <button onclick="closeAddMenuModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-circle-plus text-orange-500"></i>
+                เพิ่มเมนูใหม่ / ใส่รูปอาหาร
+            </h3>
+
+            <form id="addMenuForm" onsubmit="handleAddMenu(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">ชื่อเมนูอาหาร *</label>
+                    <input type="text" id="inputTitle" required placeholder="เช่น ข้าวขาหมู" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">คำอธิบายเมนู *</label>
+                    <textarea id="inputDesc" required rows="2" placeholder="เช่น ข้าวขาหมูนุ่มๆ น้ำราดกลมกล่อม พร้อมไข่ต้มและผักกาดดอง" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">ราคา (บาท) *</label>
+                        <input type="number" id="inputPrice" required placeholder="60" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">หมวดหมู่</label>
+                        <input type="text" id="inputCategory" placeholder="เช่น อาหารจานเดียว" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">URL รูปภาพ (หรือปล่อยว่างเพื่อแสดง Placeholder)</label>
+                    <input type="text" id="inputImg" placeholder="https://example.com/my-food.jpg" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                </div>
+
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="closeAddMenuModal()" class="w-1/2 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50">
+                        ยกเลิก
+                    </button>
+                    <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-orange-500 text-white font-semibold text-sm hover:bg-orange-600 shadow-md shadow-orange-200">
+                        บันทึกเมนู
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        /* 
+        ========================================================================
+        * 📌 [จุดสำหรับเปลี่ยนรูปภาพและข้อมูลในโค้ด]
+        * ท่านสามารถใส่ URL รูปภาพของท่านที่ค่า image ได้เลย เช่น
+        * image: "https://mywebsite.com/padthai.jpg" หรือ "images/padthai.jpg"
+        * หากเว้นว่างไว้ "" ระบบจะแสดงช่อง Placeholder "ใส่รูปภาพอาหารของคุณที่นี่"
+        ========================================================================
+        */
+        const foodDatabase = [
+            {
+                id: 1,
+                title: "ผัดกะเพราไข่ดาว",
+                description: "เมนูสิ้นคิดแต่สวรรค์บนดิน! ผัดกะเพรารสจัดจ้าน หอมกลิ่นใบกะเพราแท้ ทานคู่กับไข่ดาวขอบกรอบไข่แดงเยิ้มๆ",
+                price: 55,
+                category: "อาหารจานเดียว",
+                image: "krapao.jpg" // <-- ใส่ URL รูปภาพของคุณที่นี่
+            },
+            {
+                id: 2,
+                title: "ข้าวมันไก่ตอน",
+                description: "ข้าวมันหอมนุ่มเม็ดสวย ทานกับเนื้อไก่ตอนต้มชิ้นหนานุ่มฉ่ำ เสิร์ฟพร้อมน้ำจิ้มเต้าเจี้ยวรสเด็ดครบรส",
+                price: 60,
+                category: "อาหารจานเดียว",
+                image: "kaomunkai.webp" // <-- ใส่ URL รูปภาพของคุณที่นี่
+            },
+            {
+                id: 3,
+                title: "ผัดไทยกุ้งสุก",
+                description: "เส้นจันทน์เหนียวนุ่มผัดซอสมะขามเปียกสูตรโบราณ รสชาติกลมกล่อมสามรส เสิร์ฟพร้อมกุ้งสุกตัวโต",
+                price: 85,
+                category: "เส้น / ก๋วยเตี๋ยว",
+                image: "padthai.webp" // <-- ใส่ URL รูปภาพของคุณที่นี่
+            },
+            {
+                id: 4,
+                title: "ต้มยำกุ้งน้ำข้น",
+                description: "เมนูต้มยำระดับตำนาน น้ำซุปเข้มข้นหอมกลิ่นสมุนไพร ข่า ตะไคร้ ใบมะกรูด และมะนาวแท้",
+                price: 180,
+                category: "ต้ม / ซุป",
+                image: "tomyumkung.jpg" // <-- ใส่ URL รูปภาพของคุณที่นี่
+            },
+            {
+                id: 5,
+                title: "ส้มตำไทยไข่เค็ม",
+                description: "ส้มตำไทยรสแซ่บ เปรี้ยว หวาน เผ็ด ครบรส โรยถั่วคั่วสดใหม่ เสิร์ฟพร้อมไข่เค็มมันๆ",
+                price: 70,
+                category: "อาหารอีสาน",
+                image: "tumtaikaiyang.jpg" // <-- ใส่ URL รูปภาพของคุณที่นี่
+            },
+            {
+                id: 6,
+                title: "ข้าวหมูกรอบ",
+                description: "หมูกรอบหนังกรอบสนั่น เนื้อนุ่มชุ่มฉ่ำ หั่นชิ้นหนาพอดีคำ ราดด้วยซอสสูตรเข้มข้น",
+                price: 65,
+                category: "อาหารจานเดียว",
+                image: "mookrob.jpeg" // <-- ใส่ URL รูปภาพของคุณที่นี่
+            },
+        ];
+
+        // State variables
+        let isRandomizing = false;
+        let currentIndex = 0;
+        let lastSelectedIndex = -1;
+
+        // Elements
+        const foodImg = document.getElementById('foodImg');
+        const imgPlaceholder = document.getElementById('imgPlaceholder');
+        const foodTitle = document.getElementById('foodTitle');
+        const foodDescription = document.getElementById('foodDescription');
+        const foodPrice = document.getElementById('foodPrice');
+        const foodCategory = document.getElementById('foodCategory');
+        const menuCard = document.getElementById('menuCard');
+        const randomBtn = document.getElementById('randomBtn');
+        const btnIcon = document.getElementById('btnIcon');
+        const btnText = document.getElementById('btnText');
+        const totalMenuItemsCount = document.getElementById('totalMenuItemsCount');
+
+        // Initial setup
+        window.addEventListener('DOMContentLoaded', () => {
+            updateTotalCount();
+            displayMenu(0, false);
+        });
+
+        function updateTotalCount() {
+            totalMenuItemsCount.textContent = foodDatabase.length;
+        }
+
+        // Display selected menu item details
+        function displayMenu(index, triggerAnimation = true) {
+            currentIndex = index;
+            const item = foodDatabase[index];
+            if (!item) return;
+
+            foodTitle.textContent = item.title;
+            foodDescription.textContent = item.description;
+            foodPrice.textContent = item.price;
+            foodCategory.textContent = item.category || 'อาหารทั่วไป';
+
+            // Image handling (Placeholder or Real Image)
+            if (item.image && item.image.trim() !== "") {
+                foodImg.src = item.image;
+                foodImg.classList.remove('hidden');
+                imgPlaceholder.classList.add('hidden');
+            } else {
+                foodImg.src = "";
+                foodImg.classList.add('hidden');
+                imgPlaceholder.classList.remove('hidden');
+            }
+
+            if (triggerAnimation) {
+                menuCard.classList.remove('fade-enter');
+                void menuCard.offsetWidth;
+                menuCard.classList.add('fade-enter');
+            }
+        }
+
+        function handleImgLoadSuccess() {
+            if (foodImg.src && foodImg.src !== window.location.href) {
+                foodImg.classList.remove('hidden');
+                imgPlaceholder.classList.add('hidden');
+            }
+        }
+
+        function handleImgLoadError() {
+            foodImg.classList.add('hidden');
+            imgPlaceholder.classList.remove('hidden');
+        }
+
+        // Randomize logic
+        function randomizeMenu() {
+            if (isRandomizing) return;
+            isRandomizing = true;
+
+            randomBtn.disabled = true;
+            randomBtn.classList.add('opacity-90', 'cursor-not-allowed');
+            btnIcon.className = "fa-solid fa-spinner fa-spin text-xl";
+            btnText.textContent = "กำลังเลือกเมนูอร่อย...";
+            menuCard.classList.add('animate-randomizing');
+
+            let counter = 0;
+            const maxTicks = 14;
+            const speed = 80;
+
+            const interval = setInterval(() => {
+                let randomIndex;
+                do {
+                    randomIndex = Math.floor(Math.random() * foodDatabase.length);
+                } while (foodDatabase.length > 1 && randomIndex === lastSelectedIndex);
+                
+                lastSelectedIndex = randomIndex;
+
+                // Update text visually during roll
+                const item = foodDatabase[randomIndex];
+                foodTitle.textContent = item.title;
+                foodPrice.textContent = item.price;
+                foodCategory.textContent = item.category;
+
+                if (item.image && item.image.trim() !== "") {
+                    foodImg.src = item.image;
+                    foodImg.classList.remove('hidden');
+                    imgPlaceholder.classList.add('hidden');
+                } else {
+                    foodImg.classList.add('hidden');
+                    imgPlaceholder.classList.remove('hidden');
+                }
+
+                counter++;
+                
+                if (counter >= maxTicks) {
+                    clearInterval(interval);
+                    
+                    const finalIndex = Math.floor(Math.random() * foodDatabase.length);
+                    displayMenu(finalIndex, true);
+                    
+                    menuCard.classList.remove('animate-randomizing');
+                    randomBtn.disabled = false;
+                    randomBtn.classList.remove('opacity-90', 'cursor-not-allowed');
+                    btnIcon.className = "fa-solid fa-dice text-xl animate-bounce";
+                    btnText.textContent = "สุ่มเมนูอีกครั้ง!";
+                    isRandomizing = false;
+                }
+            }, speed);
+        }
+
+        function openEditCurrentImageModal() {
+            const currentItem = foodDatabase[currentIndex];
+            const url = prompt(`ใส่ URL รูปภาพสำหรับเมนู "${currentItem.title}":`, currentItem.image || "");
+            if (url !== null) {
+                currentItem.image = url.trim();
+                displayMenu(currentIndex, true);
+            }
+        }
+
+        function scrollToMenu() {
+            document.getElementById('menuCardContainer').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            randomizeMenu();
+        }
+
+        function openAddMenuModal() {
+            document.getElementById('addMenuModal').classList.remove('hidden');
+        }
+
+        function closeAddMenuModal() {
+            document.getElementById('addMenuModal').classList.add('hidden');
+            document.getElementById('addMenuForm').reset();
+        }
+
+        function handleAddMenu(event) {
+            event.preventDefault();
+            
+            const title = document.getElementById('inputTitle').value.trim();
+            const desc = document.getElementById('inputDesc').value.trim();
+            const price = Number(document.getElementById('inputPrice').value);
+            const category = document.getElementById('inputCategory').value.trim() || 'เมนูเพิ่มเอง';
+            const img = document.getElementById('inputImg').value.trim();
+
+            const newMenu = {
+                id: foodDatabase.length + 1,
+                title: title,
+                description: desc,
+                price: price,
+                category: category,
+                image: img
+            };
+
+            foodDatabase.push(newMenu);
+            updateTotalCount();
+            closeAddMenuModal();
+            displayMenu(foodDatabase.length - 1, true);
+        }
+    </script>
+</body>
+</html>
